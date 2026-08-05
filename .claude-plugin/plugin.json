@@ -1,0 +1,10 @@
+{
+  "name": "comsol-hbm-auto",
+  "version": "0.1.0",
+  "description": "자연어 목표 -> 오픈소스 대량 탐색(gmsh+scikit-fem) -> 발산/제약 판정 게이트 -> 골든 승격 -> COMSOL 배치 1회 -> 풀린 .mph 산출. HBM 다이스택 + 핀 히트싱크 열저항 최적화. COMSOL 없이 .mph 해부(inspect_mph)와 캘리브레이션(calibrate) 포함.",
+  "author": { "name": "kth181399", "email": "kth181399@gmail.com" },
+  "keywords": ["comsol","mph","hbm","heatsink","pin-fin","thermal","heat-transfer",
+               "optimization","gmsh","scikit-fem","fem","parametric","golden","autonomous"],
+  "commands": ["./commands/comsol-hbm.md"],
+  "skills": ["./skills/comsol-hbm"]
+}

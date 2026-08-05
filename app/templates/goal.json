@@ -1,0 +1,105 @@
+{
+  "_설명": "탐색 목표. 자연어 지시가 이 파일로 번역된다. 경로/장비 설정은 project.json 에 있다.",
+  "objective": "rth",
+  "_objective_후보": [
+    "rth",
+    "q_conv",
+    "tmax",
+    "tmax_stack"
+  ],
+  "_objective_주의": "tmax/tmax_stack 는 현 모델에서 고정온도 경계에 묶여 전 케이스 동일값이 나온다. docs/findings.md D-1 참조.",
+  "mesh_tol_pct": 1.0,
+  "_mesh_설명": "메시는 최적화 대상이 아니다. 세대마다 이 허용오차로 수렴을 확인하고, 통과 못 하면 INVALID.",
+  "model_options": {
+    "_설명": "모델 가정 스위치. Vivado 스윕에서 impl 전략을 고르는 자리에 해당한다. CLI 인자가 이 값을 덮어쓴다.",
+    "anisotropic_materials": true,
+    "_anisotropic_설명": "OFF 로 하면 Graphite 같은 이방성 재료를 데이터시트 헤드라인 k 로 등방 취급한다. 성능을 과대평가하므로 물리적 상한을 볼 때만 쓴다.",
+    "hs_orientation": "z",
+    "_orientation_설명": "이방성 히트싱크의 고전도축. z=핀 축(원하는 배향), xy=시트 자연 배향.",
+    "process_constraints": true,
+    "_constraints_설명": "OFF 로 하면 제작 가능성을 무시하고 물리적 최적만 찾는다. 탐색 초기 상한 확인용.",
+    "disabled_rules": [],
+    "_rules": [
+      "die_attach_dielectric",
+      "pin_aspect_ratio",
+      "min_feature_size",
+      "flow_gap",
+      "micropin_manufacturable",
+      "anisotropy_orientation"
+    ],
+    "h_model": "pumping_power",
+    "_h_model_설명": "fixed=원본(형상무관 상수, 최적화 발산) | velocity=유속고정 | pumping_power=펌핑파워고정(진짜 트레이드오프)",
+    "coolant": "water",
+    "p_pump": 1.628269e-07,
+    "_p_pump_설명": "기준 형상(직경150/피치301/높이300/4x4, water)이 원본의 h=15000 을 재현하도록 역산한 값. 이 앵커 덕분에 스윕 결과가 '같은 펌핑 예산에서의 상대 성능'이 되어 원본과 비교 가능하다.",
+    "v_inf": 0.0345695
+  },
+  "limits": {
+    "_설명": "공정/시스템 제약 파라미터. 값은 SI(m). 공정 능력과 패키지 스펙에 맞춰 조정한다.",
+    "MAX_PACKAGE_HEIGHT": 0.0015,
+    "_MAX_PACKAGE_HEIGHT_주의": "잠정값이다. 발주처/모듈 설계에서 받아야 하는 시스템 스펙이며, 최적 핀 높이가 이 숫자에 직접 좌우된다.",
+    "MAX_PIN_ASPECT": 5.0,
+    "MIN_PIN_DIAMETER": 5e-05,
+    "MIN_FLOW_GAP": 5e-05,
+    "MIN_BASE_THICKNESS": 3e-05
+  },
+  "search": {
+    "materials": {
+      "hs_material": [
+        "Cu",
+        "Al",
+        "Ag",
+        "AlN",
+        "AlSiC",
+        "Graphite"
+      ],
+      "tim_material": [
+        "NCF",
+        "TIM_hi",
+        "Solder_In"
+      ]
+    },
+    "structure": {
+      "r_pin_um": [
+        35,
+        55,
+        75,
+        95,
+        115,
+        135
+      ],
+      "h_pin_um": [
+        300,
+        450,
+        600,
+        900
+      ],
+      "p_um": [
+        200,
+        250,
+        301,
+        350,
+        425,
+        500
+      ],
+      "t_base_um": [
+        50,
+        100
+      ],
+      "n": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "_p_설명": "핀 피치. 고정 풋프린트 안에서 면적을 얼마나 쓰는지를 결정하는 변수. 좁히면 핀 수가 늘지만 유로가 막혀 h 가 떨어진다 - 여기서 내부 최적해가 나온다."
+    }
+  },
+  "stop": {
+    "max_generations": 200,
+    "no_improvement_rounds": 3,
+    "_설명": "개선 없는 라운드가 이만큼 연속되면 탐색을 멈추고 사용자를 부른다."
+  },
+  "_미해결": "docs/findings.md D-2 - h 가 형상과 무관한 상수라 구조 탐색은 탐색범위 모서리로 발산한다. 재료 탐색은 후보집합이 유한하므로 영향 없음."
+}

@@ -1,0 +1,11 @@
+{
+  "name": "comsol-hbm-auto",
+  "owner": { "name": "TAEHYUN9999" },
+  "plugins": [
+    {
+      "name": "comsol-hbm-auto",
+      "source": "./",
+      "description": "COMSOL HBM 핀히트싱크 자율 최적화: 자연어 목표 -> 오픈소스 대량 탐색(gmsh+scikit-fem) -> 판정 게이트 -> 골든 승격 -> COMSOL 배치 1회 -> 풀린 .mph 산출."
+    }
+  ]
+}
