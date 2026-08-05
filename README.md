@@ -28,13 +28,37 @@ COMSOL 배치까지 완주해 만든 것이다.
 ### 사전 요구
 
 ```bash
-python3 --version          # 3.10 이상
-python3 -m venv --help     # 없으면: sudo apt install python3-venv
-gh auth login              # private 리포이므로 필수
+# 1) 파이썬 3.10 이상 + venv
+python3 --version
+python3 -m venv --help        # 오류가 나면:
+sudo apt install python3-venv
+
+# 2) GitHub CLI (private 리포라 필수)
+gh --version                  # 없으면:
+sudo apt install gh
+gh auth login                 # GitHub.com -> HTTPS -> 브라우저 인증
 ```
 
-COMSOL 은 정품 라이선스가 설정된 설치본이 있어야 한다 (탐색은 COMSOL 없이도 되지만
-`.mph` 산출 단계에서 필요하다).
+`gh auth login` 은 **머신당 한 번**이면 된다. 이후 `/plugin install` 과
+`/plugin update` 에서 다시 묻지 않는다. WSL 에서도 동작한다(브라우저는 윈도우 쪽이 열린다).
+
+Ubuntu 22.04 의 apt `gh` 는 2.4.0 으로 다소 낡았지만 인증과 플러그인 설치에는 충분하다.
+최신판이 필요하면 GitHub 공식 저장소를 추가한다:
+
+```bash
+(type -p wget >/dev/null || sudo apt install wget -y) \
+ && sudo mkdir -p -m 755 /etc/apt/keyrings \
+ && wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null \
+ && sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+ && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+ && sudo apt update && sudo apt install gh -y
+```
+
+**COMSOL** 은 정품 라이선스가 설정된 설치본이 있어야 한다.
+탐색·분석은 COMSOL 없이도 전부 되고, `.mph` 산출 단계에서만 필요하다.
+`bootstrap.sh` 는 COMSOL 이 없어도 완주하며 `init_ws.py --status` 에 "못 찾음" 으로 표시된다.
 
 ### 1. 플러그인 설치 (Claude Code 안에서)
 
