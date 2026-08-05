@@ -16,7 +16,7 @@
 set -uo pipefail
 PLUGIN="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="$PLUGIN/app"
-PY="${CHBM_PYTHON:-$PLUGIN/.venv/bin/python}"
+PY="${CHBM_PYTHON:-${CHBM_VENV:-$PLUGIN/.venv}/bin/python}"
 
 PARAMS=""; OUT=""; SRC=""; TAG=""
 while [[ $# -gt 0 ]]; do

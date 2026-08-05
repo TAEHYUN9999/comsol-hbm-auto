@@ -12,7 +12,9 @@
 set -euo pipefail
 PLUGIN="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="$PLUGIN/app"
-VENV="$PLUGIN/.venv"
+# venv 위치. 플러그인이 cache/ 아래 설치되면 업데이트 시 지워지므로,
+# CHBM_VENV 로 안정된 경로를 지정할 수 있게 한다.
+VENV="${CHBM_VENV:-$PLUGIN/.venv}"
 
 WS_ARG=""; SRC_ARG=""
 while [[ $# -gt 0 ]]; do
@@ -66,6 +68,7 @@ cat <<EOF
 
 앞으로 실행할 때:
   export CHBM_WS="$CHBM_WS"
+  export CHBM_VENV="$VENV"
   $VENV/bin/python $APP/<스크립트>.py
 
 원본 모델을 아직 등록하지 않았다면:

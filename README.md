@@ -23,17 +23,80 @@ COMSOL 배치까지 완주해 만든 것이다.
 
 ---
 
-## 설치
+## 설치 (다른 컴퓨터에서 처음 쓸 때)
+
+### 사전 요구
 
 ```bash
-bash scripts/bootstrap.sh --source-mph <원본.mph>
+python3 --version          # 3.10 이상
+python3 -m venv --help     # 없으면: sudo apt install python3-venv
+gh auth login              # private 리포이므로 필수
 ```
 
-sudo 를 쓰지 않는다. 플러그인 안에 venv 를 만들고 gmsh/meshio/scikit-fem/numpy/scipy 를 깐다.
+COMSOL 은 정품 라이선스가 설정된 설치본이 있어야 한다 (탐색은 COMSOL 없이도 되지만
+`.mph` 산출 단계에서 필요하다).
+
+### 1. 플러그인 설치 (Claude Code 안에서)
+
+```
+/plugin marketplace add TAEHYUN9999/comsol-hbm-auto
+/plugin install comsol-hbm-auto@comsol-hbm-auto
+```
+
+설치되면 `~/.claude/plugins/cache/comsol-hbm-auto/comsol-hbm-auto/<버전>/` 에 들어간다.
+
+### 2. 실행환경 부트스트랩 (터미널에서 한 번)
+
+```bash
+# 플러그인 경로를 잡는다 (버전 폴더가 바뀌어도 최신을 고른다)
+PLUGIN=$(ls -d ~/.claude/plugins/cache/comsol-hbm-auto/comsol-hbm-auto/*/ | sort -V | tail -1)
+
+# venv 는 캐시 밖에 둔다. 플러그인 업데이트 시 캐시가 지워져도 살아남는다.
+export CHBM_VENV=~/.comsol-hbm-venv
+
+cd <작업할 프로젝트 폴더>
+bash "$PLUGIN/scripts/bootstrap.sh" --source-mph "<원본.mph>"
+```
+
+sudo 를 쓰지 않는다. venv 를 만들고 gmsh/meshio/scikit-fem/numpy/scipy 를 깐다.
 원본 모델을 주면 **파라메트릭 여부를 자동 검사**한다 (CAD 임포트 형상이면 자동화 불가이므로
 여기서 걸러낸다). 마지막에 해석해 대조군 게이트를 돌려 솔버가 정상인지 확인한다.
 
-COMSOL 은 `COMSOL_ROOT` 환경변수나 `project.json` 의 `comsol_cmd` 로 지정한다.
+### 3. 환경변수 고정 (셸 프로필에 넣어두면 편하다)
+
+```bash
+export CHBM_VENV=~/.comsol-hbm-venv
+export CHBM_WS=<작업폴더>/.comsol-hbm
+export COMSOL_ROOT=/opt/comsol62/multiphysics     # 또는 project.json 의 comsol_cmd
+```
+
+`CHBM_WS` 를 안 넣어도 현재 디렉터리부터 위로 올라가며 `.comsol-hbm/` 을 자동 탐색한다.
+
+### 4. 확인
+
+```bash
+$CHBM_VENV/bin/python "$PLUGIN/app/init_ws.py" --status
+```
+
+원본 mph 경로, COMSOL 탐지 여부, 캘리브레이션 상태, 세대 수가 나온다.
+
+### 플러그인 업데이트 후
+
+```
+/plugin update comsol-hbm-auto
+```
+
+캐시 폴더가 새 버전으로 바뀌므로 `PLUGIN` 경로를 다시 잡는다.
+`CHBM_VENV` 를 캐시 밖에 뒀다면 venv 재설치는 필요 없다. 그래도 한 번 더 돌리면
+의존성만 확인하고 넘어간다 (idempotent).
+
+### 로컬 개발용 (리포를 직접 클론해 쓸 때)
+
+```bash
+git clone git@github.com:TAEHYUN9999/comsol-hbm-auto.git
+cd comsol-hbm-auto
+bash scripts/bootstrap.sh --source-mph <원본.mph>
+```
 
 ---
 
@@ -48,9 +111,9 @@ COMSOL 은 `COMSOL_ROOT` 환경변수나 `project.json` 의 `comsol_cmd` 로 지
 직접 실행:
 
 ```bash
-export CHBM_WS=<작업공간>
-PY=<플러그인>/.venv/bin/python
-APP=<플러그인>/app
+PLUGIN=$(ls -d ~/.claude/plugins/cache/comsol-hbm-auto/comsol-hbm-auto/*/ | sort -V | tail -1)
+PY=$CHBM_VENV/bin/python
+APP=$PLUGIN/app
 
 $PY $APP/init_ws.py --status                  상태
 $PY $APP/inspect_mph.py <파일.mph>            COMSOL 없이 모델 해부
@@ -63,7 +126,7 @@ $PY $APP/refine.py                            (r_pin,p) 2D 교차확인
 $PY $APP/line_search.py                       제약선 탐색 + 스펙 민감도
 $PY $APP/promote.py <세대>                    골든 승격 (사용자 확인)
 $PY $APP/report.py                            history.html
-bash <플러그인>/scripts/solve_comsol.sh --params r_pin=78[um],p=206[um],n=6
+bash $PLUGIN/scripts/solve_comsol.sh --params r_pin=78[um],p=206[um],n=6
 ```
 
 ### 모델 가정 스위치 (Vivado impl 전략 고르듯)
