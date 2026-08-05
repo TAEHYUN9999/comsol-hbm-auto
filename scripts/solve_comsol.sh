@@ -18,13 +18,14 @@ PLUGIN="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="$PLUGIN/app"
 PY="${CHBM_PYTHON:-${CHBM_VENV:-$PLUGIN/.venv}/bin/python}"
 
-PARAMS=""; OUT=""; SRC=""; TAG=""
+PARAMS=""; OUT=""; SRC=""; TAG=""; LOWMEM=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --params) PARAMS="$2"; shift 2 ;;
     --out)    OUT="$2"; shift 2 ;;
     --source) SRC="$2"; shift 2 ;;
     --tag)    TAG="$2"; shift 2 ;;
+    --lowmem) LOWMEM=1; shift ;;
     *) echo "알 수 없는 인자: $1" >&2; exit 1 ;;
   esac
 done
@@ -56,6 +57,19 @@ LOG="$CFG_WS/out/solve_$(date +%Y%m%d_%H%M%S).log"
 
 [[ -n "$COMSOL" && -f "$COMSOL" ]] || { echo "오류: COMSOL 실행파일을 찾을 수 없다. COMSOL_ROOT 또는 project.json comsol_cmd 설정." >&2; exit 1; }
 [[ -f "$SRC" ]] || { echo "오류: 원본 mph 없음: $SRC" >&2; exit 1; }
+
+# 저메모리(노트북) 모드: 이산화 2차 -> 1차 변형본을 만들어 그것을 입력으로 쓴다.
+# 자유도가 약 7.5배 줄어 메모리가 16.5GB 급에서 1~2GB 급으로 내려간다.
+if [[ $LOWMEM -eq 1 ]]; then
+  LM="$CFG_WS/out/lowmem_source.mph"
+  if [[ ! -f "$LM" ]]; then
+    echo "저메모리 변형본 생성중 (이산화 2차 -> 1차)..."
+    CHBM_APP="$APP" "$PY" "$APP/make_lowmem.py" "$SRC" "$LM" | tail -4 || exit 1
+  else
+    echo "저메모리 변형본 재사용: $LM"
+  fi
+  SRC="$LM"
+fi
 [[ -e "$OUT" ]] && { echo "오류: 출력이 이미 있다(덮어쓰지 않음): $OUT" >&2; exit 1; }
 mkdir -p "$(dirname "$OUT")"
 
@@ -84,6 +98,17 @@ if [[ -f "$LOG" ]]; then
     echo; echo "--- 실패 시그니처 ---"
     grep -inE 'license|out of memory|could not obtain|exception|error:' "$LOG" | head -15
     fail=1
+  fi
+  if [[ $LOWMEM -eq 1 ]]; then
+    echo; echo "--- 저메모리 모드 반영 확인 ---"
+    dof=$(grep -oE '자유도 수: [0-9]+' "$LOG" | head -1 | grep -oE '[0-9]+')
+    if [[ -n "$dof" ]]; then
+      echo "  자유도 $dof"
+      [[ "$dof" -lt 400000 ]] \
+        && echo "  -> 1차 이산화 반영됨 (2차 대비 크게 감소)" \
+        || { echo "  경고: 자유도가 줄지 않았다. 이산화 변경이 무시된 것이다."; \
+             echo "        GUI 에서 물리현상 > 이산화 > 온도: 선형 으로 직접 바꿀 것."; fail=1; }
+    fi
   fi
   echo; echo "--- 재빌드 확인 ---"
   if grep -qiE '요소 수|Number of elements|자유 메시|Free mesh|사면체' "$LOG"; then

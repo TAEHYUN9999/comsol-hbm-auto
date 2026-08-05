@@ -1,32 +1,27 @@
 {
   "_설명": "프로젝트별 경로와 장비 설정. goal.json 은 '무엇을 찾을까'이고 이 파일은 '어디서 어떻게'다.",
-
   "source_mph": null,
   "_source_mph": "원본 COMSOL 모델 경로. 최종 .mph 산출물의 베이스가 된다. 이 파일은 절대 수정하지 않는다(읽기 전용 취급).",
-
   "comsol_cmd": null,
   "_comsol_cmd": "comsol 실행파일 또는 래퍼 스크립트 경로. null 이면 COMSOL_CMD/COMSOL_ROOT 환경변수와 표준 설치 경로를 순서대로 탐색한다.",
-
   "study_tag": "std1",
   "_study_tag": "배치로 실행할 스터디 태그. 원본 모델에서 확인할 것.",
-
-  "param_names": ["r_pin", "p", "n"],
+  "param_names": [
+    "r_pin",
+    "p",
+    "n"
+  ],
   "_param_names": "COMSOL 에 -pname 으로 주입할 매개변수. 원본 .mph 의 전역 매개변수 이름과 일치해야 한다.",
-
   "np": null,
   "_np": "COMSOL 배치 코어 수. null 이면 자동(최대 32).",
-
   "archive_dir": null,
   "_archive_dir": "골든 산출물을 미러링할 외장/백업 경로. null 이면 미러링 안 함.",
-
   "_calibration_설명": "오픈소스 백엔드가 COMSOL 기준값을 재현하도록 맞추는 앵커. calibrate.py 가 채운다.",
   "calibration": {
     "p_pump": null,
     "_p_pump": "기준 형상이 원본의 h_conv 를 재현하도록 역산한 펌핑파워 [W]. 이게 있어야 스윕 결과가 '같은 펌핑 예산에서의 상대 성능'이 되어 원본과 비교 가능해진다.",
-
     "stack_resistance_factor": 1.0,
     "_stack_resistance_factor": "다이스택 층의 유효 k_z 에 곱하는 보정계수. 1.0 = 보정 없음. 1.0 미만이면 스택을 더 저항성으로 만든다. 범프/TSV 계면의 수축저항을 유효물성이 무시하는 것을 보정하기 위한 항이며, COMSOL 기준값 대조로 역산한다.",
-
     "reference": {
       "_설명": "캘리브레이션 기준이 된 COMSOL 실측값. 없으면 오픈소스 절대값은 미검증 상태다.",
       "geometry": null,
@@ -36,5 +31,7 @@
       "R_th": null,
       "measured_at": null
     }
-  }
+  },
+  "low_memory": false,
+  "_low_memory": "RAM 16GB 급 환경(WSL2 포함)에서 COMSOL 을 돌릴 때 true. 이산화를 2차->1차로 낮춘 변형본을 만들어 쓴다. 자유도 약 7.5배 감소, 메모리 16.5GB급 -> 1~2GB급. 정확도는 메시 수렴 게이트로 확인할 것."
 }
