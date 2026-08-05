@@ -60,16 +60,35 @@ Ubuntu 22.04 의 apt `gh` 는 2.4.0 으로 다소 낡았지만 인증과 플러�
 탐색·분석은 COMSOL 없이도 전부 되고, `.mph` 산출 단계에서만 필요하다.
 `bootstrap.sh` 는 COMSOL 이 없어도 완주하며 `init_ws.py --status` 에 "못 찾음" 으로 표시된다.
 
-### 1. 플러그인 설치 (Claude Code 안에서)
+### 1. 플러그인 설치 (Claude Code 안에서) — 이걸로 끝이다
 
 ```
 /plugin marketplace add TAEHYUN9999/comsol-hbm-auto
 /plugin install comsol-hbm-auto@comsol-hbm-auto
+/reload-plugins
 ```
 
 설치되면 `~/.claude/plugins/cache/comsol-hbm-auto/comsol-hbm-auto/<버전>/` 에 들어간다.
 
-### 2. 실행환경 부트스트랩 (터미널에서 한 번)
+**슬래시 커맨드로만 쓴다면 여기까지가 전부다.** 아래 2~4번은 하지 않아도 된다.
+
+```
+/comsol-hbm-auto:comsol-hbm 유로폭 70um 기준으로 최적 찾아서 mph 만들어라
+```
+
+첫 호출 때 스킬이 실행환경이 없는 것을 감지하면 **직접 부트스트랩을 돌린다**(2~3분).
+원본 `.mph` 경로를 모르면 그때 물어본다. 터미널을 열 필요가 없다.
+
+물어보는 것은 셋뿐이다: 원본 `.mph` 경로 / 골든 승격 / COMSOL 메모리 모드.
+
+---
+
+## 스크립트를 직접 돌릴 때만 필요한 것 (2~4번)
+
+슬래시 커맨드를 쓴다면 **건너뛰어라.** 아래는 터미널에서 `explore.py` 등을
+손으로 실행하고 싶을 때만 해당한다.
+
+### 2. 실행환경 부트스트랩
 
 ```bash
 # 플러그인 경로를 잡는다 (버전 폴더가 바뀌어도 최신을 고른다)
@@ -85,6 +104,8 @@ bash "$PLUGIN/scripts/bootstrap.sh" --source-mph "<원본.mph>"
 sudo 를 쓰지 않는다. venv 를 만들고 gmsh/meshio/scikit-fem/numpy/scipy 를 깐다.
 원본 모델을 주면 **파라메트릭 여부를 자동 검사**한다 (CAD 임포트 형상이면 자동화 불가이므로
 여기서 걸러낸다). 마지막에 해석해 대조군 게이트를 돌려 솔버가 정상인지 확인한다.
+
+스킬이 자동으로 돌리는 것과 같은 스크립트다. 이미 되어 있으면 의존성만 확인하고 넘어간다.
 
 ### 3. 환경변수 고정 (셸 프로필에 넣어두면 편하다)
 
@@ -104,15 +125,18 @@ $CHBM_VENV/bin/python "$PLUGIN/app/init_ws.py" --status
 
 원본 mph 경로, COMSOL 탐지 여부, 캘리브레이션 상태, 세대 수가 나온다.
 
+---
+
 ### 플러그인 업데이트 후
 
 ```
 /plugin update comsol-hbm-auto
+/reload-plugins
 ```
 
-캐시 폴더가 새 버전으로 바뀌므로 `PLUGIN` 경로를 다시 잡는다.
-`CHBM_VENV` 를 캐시 밖에 뒀다면 venv 재설치는 필요 없다. 그래도 한 번 더 돌리면
-의존성만 확인하고 넘어간다 (idempotent).
+슬래시 커맨드만 쓴다면 이걸로 끝이다. 스크립트를 직접 돌린다면 캐시 폴더가
+새 버전으로 바뀌므로 `PLUGIN` 경로를 다시 잡는다. `CHBM_VENV` 를 캐시 밖에 뒀다면
+venv 재설치는 필요 없다.
 
 ### 어느 경로를 택할 것인가
 
