@@ -90,13 +90,36 @@ $CHBM_VENV/bin/python "$PLUGIN/app/init_ws.py" --status
 `CHBM_VENV` 를 캐시 밖에 뒀다면 venv 재설치는 필요 없다. 그래도 한 번 더 돌리면
 의존성만 확인하고 넘어간다 (idempotent).
 
-### 로컬 개발용 (리포를 직접 클론해 쓸 때)
+### 어느 경로를 택할 것인가
+
+| | 1~4번 (`/plugin install`) | 아래 클론 방식 |
+|---|---|---|
+| 목적 | **플러그인을 쓴다** | **플러그인 코드를 고친다** |
+| `/comsol-hbm` 슬래시 커맨드 | O | **X** |
+| SKILL.md 가 Claude Code 에 로드됨 | O | **X** |
+| 말로 지시하면 알아서 진행 | O | **X** (스크립트를 직접 쳐야 함) |
+| 스크립트 수동 실행 | O | O |
+
+**처음 쓰는 컴퓨터라면 1~4번을 하라.** 아래 클론 방식만 하면 Claude Code 는 그 폴더의
+존재를 모르므로 스킬도 커맨드도 뜨지 않는다.
+
+### 플러그인 코드를 고칠 때 (개발자용)
 
 ```bash
 git clone git@github.com:TAEHYUN9999/comsol-hbm-auto.git
 cd comsol-hbm-auto
 bash scripts/bootstrap.sh --source-mph <원본.mph>
 ```
+
+고친 것을 Claude Code 에서 스킬로 쓰려면 클론 폴더를 마켓플레이스로 등록한다:
+
+```
+/plugin marketplace add <클론경로>
+/plugin install comsol-hbm-auto@comsol-hbm-auto
+/reload-plugins
+```
+
+이러면 GitHub 를 거치지 않고 로컬 수정본이 바로 스킬로 로드된다.
 
 ---
 
