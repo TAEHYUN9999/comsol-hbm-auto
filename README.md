@@ -159,6 +159,59 @@ bash $PLUGIN/scripts/solve_comsol.sh --params r_pin=78[um],p=206[um],n=6
 
 ---
 
+## 다른 컴퓨터로 프로젝트를 통째로 옮기기
+
+**리포에는 도구만 있다. 프로젝트 데이터는 따라가지 않는다.**
+
+| | 리포 포함 | 크기 | 옮기는 법 |
+|---|---|---|---|
+| 스킬/앱/스크립트/문서 | O | 수백 KB | `/plugin install` |
+| 작업공간 (세대, 골든, 캘리브레이션, goal.json) | X | 수십 MB | 아래 절차 |
+| 원본 `.mph` | X | 수백 MB | 별도 복사 |
+| 메시·중간 산출물 (`runs/`) | X | — | 재생성되므로 옮기지 않는다 |
+
+원본 `.mph` 와 메시를 리포에 넣지 않는 것은 의도한 것이다. 하지만 **세대 이력과
+캘리브레이션은 작고 가치가 크므로 반드시 함께 옮겨야 한다** — 없으면 골든도
+보정계수도 잃고 처음부터 다시 시작하게 된다.
+
+### 내보내기 (원래 컴퓨터)
+
+```bash
+cd <작업폴더>
+tar czf comsol-hbm-ws.tar.gz --exclude='runs' .comsol-hbm
+```
+
+`tar` 를 쓰는 이유: `golden` 이 심링크다. `cp -r` 로 옮기면 깨질 수 있다.
+(깨져도 `GOLDEN.txt` 폴백이 있어 골든은 복구되지만, tar 가 안전하다)
+
+### 가져오기 (새 컴퓨터)
+
+```bash
+cd <새 작업폴더>
+tar xzf comsol-hbm-ws.tar.gz
+
+# 원본 mph 경로가 달라졌으므로 재지정한다 (파라메트릭 재검사도 함께 수행)
+$CHBM_VENV/bin/python "$PLUGIN/app/init_ws.py" --source-mph "<새 경로>/원본.mph"
+$CHBM_VENV/bin/python "$PLUGIN/app/init_ws.py" --status
+```
+
+`--status` 가 캘리브레이션 계수, 골든, 세대 수를 보여준다. 원본 경로가 깨져 있으면 경고한다.
+COMSOL 경로는 자동 탐지되며(리눅스 `/opt`, `/usr/local`, macOS `/Applications`, 홈디렉터리),
+못 찾으면 `COMSOL_ROOT` 또는 `project.json` 의 `comsol_cmd` 로 지정한다.
+
+### 절대경로 감사
+
+코드에는 사용자/장치 고유 경로가 없다. 이식 후 확인하려면:
+
+```bash
+git ls-files -z | xargs -0 grep -nHE '/home/|/media/|/Users/|/tmp/'
+```
+
+결과가 비어야 정상이다. (COMSOL 표준 설치 경로 glob 은 `workspace.py` 안에 있고
+절대경로 하드코딩이 아니라 탐지 패턴이다)
+
+---
+
 ## 결과 보고 규칙 (중요)
 
 **개선은 절대값(K/W)으로 보고한다.** 스택 저항은 모든 설계에 똑같이 붙는 직렬 항이라

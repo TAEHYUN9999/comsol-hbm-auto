@@ -102,8 +102,19 @@ def comsol_cmd() -> str | None:
         exe = Path(root) / "bin" / "comsol"
         if exe.exists():
             return str(exe)
-    for g in ("/opt/comsol*/multiphysics/bin/comsol", "/usr/local/comsol*/multiphysics/bin/comsol"):
-        hits = sorted(Path("/").glob(g.lstrip("/")))
+    # 표준 설치 경로를 훑는다. 절대경로를 코드에 박는 대신 glob 으로만 쓴다.
+    roots = [
+        (Path("/"), "opt/comsol*/multiphysics/bin/comsol"),
+        (Path("/"), "usr/local/comsol*/multiphysics/bin/comsol"),
+        (Path("/"), "Applications/COMSOL*/Multiphysics/bin/comsol"),   # macOS
+        (Path.home(), "comsol*/multiphysics/bin/comsol"),
+        (Path.home(), "COMSOL*/Multiphysics/bin/comsol"),
+    ]
+    for base, pat in roots:
+        try:
+            hits = sorted(base.glob(pat))
+        except (OSError, PermissionError):
+            continue
         if hits:
             return str(hits[-1])
     return None

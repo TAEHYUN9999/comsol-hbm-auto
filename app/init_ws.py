@@ -41,10 +41,10 @@ def status():
         print("  제약 :", ", ".join(f"{k}={v}" for k, v in lim.items()))
     gens = list((ws.WS / "generations").glob("G*")) if (ws.WS / "generations").exists() else []
     print(f"  세대 : {len(gens)}개")
-    gl = ws.WS / "golden"
-    if gl.is_symlink():
-        import os
-        print(f"  골든 : {os.readlink(gl).split('/')[-1]}")
+    import generation
+    gname = generation.current_golden()
+    if gname:
+        print(f"  골든 : {gname}")
     out = sorted((ws.WS / "out").glob("*.mph")) if (ws.WS / "out").exists() else []
     if out:
         print("  산출 mph :", ", ".join(p.name for p in out))

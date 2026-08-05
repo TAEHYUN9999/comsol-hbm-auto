@@ -141,8 +141,14 @@ def all_generations():
 
 
 def current_golden():
+    """심링크를 우선 보고, 깨졌으면 GOLDEN.txt 로 넘어간다(이관 대비)."""
     if GOLDEN.is_symlink():
         return os.readlink(GOLDEN).split("/")[-1]
+    txt = ROOT / "GOLDEN.txt"
+    if txt.exists():
+        name = txt.read_text().strip()
+        if name and (GEN_DIR / name).is_dir():
+            return name
     return None
 
 
@@ -154,4 +160,6 @@ def promote(name):
     if GOLDEN.is_symlink() or GOLDEN.exists():
         GOLDEN.unlink()
     GOLDEN.symlink_to(Path("generations") / name)
+    # 심링크는 복사 방식(cp -r, zip, FAT/exFAT)에 따라 깨진다. 텍스트로도 남긴다.
+    (ROOT / "GOLDEN.txt").write_text(name + "\n")
     return name
