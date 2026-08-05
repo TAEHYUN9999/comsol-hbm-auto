@@ -18,12 +18,35 @@ description: Use when optimizing a parametric COMSOL heat-transfer model (HBM �
 
 ## 절차
 
-작업공간을 먼저 확인한다: `python $APP/init_ws.py --status`
+### 0-A. 실행환경 확인 - 없으면 직접 준비하라 (사용자에게 터미널을 시키지 마라)
 
-### 0. 캘리브레이션 상태 확인 (건너뛰지 마라)
+플러그인 경로와 venv 를 먼저 잡는다.
 
 ```bash
-python $APP/calibrate.py --show
+PLUGIN=$(ls -d ~/.claude/plugins/cache/comsol-hbm-auto/comsol-hbm-auto/*/ | sort -V | tail -1)
+[ -z "$PLUGIN" ] && PLUGIN=~/.claude/plugins/marketplaces/comsol-hbm-auto   # 로컬 개발본
+export CHBM_VENV="${CHBM_VENV:-$HOME/.comsol-hbm-venv}"
+APP="$PLUGIN/app"
+```
+
+`$CHBM_VENV/bin/python` 이 없으면 **네가 부트스트랩을 실행한다.** 2~3분 걸린다고 먼저 알리고:
+
+```bash
+bash "$PLUGIN/scripts/bootstrap.sh"
+```
+
+원본 `.mph` 경로를 아직 모르면 사용자에게 묻고 `--source-mph` 로 함께 넘긴다.
+경로를 모르는 채로 진행하면 탐색은 되지만 `.mph` 산출 단계에서 막힌다.
+
+`bootstrap.sh` 는 venv 생성 + 의존성 설치 + 작업공간 초기화 + 원본 파라메트릭 검사 +
+해석해 대조군 게이트까지 한 번에 한다. 이미 되어 있으면 의존성만 확인하고 넘어간다.
+
+작업공간 상태 확인: `$CHBM_VENV/bin/python $APP/init_ws.py --status`
+
+### 0-B. 캘리브레이션 상태 확인 (건너뛰지 마라)
+
+```bash
+$CHBM_VENV/bin/python $APP/calibrate.py --show
 ```
 
 `stack_resistance_factor` 가 없거나 기준값이 비어 있으면 **절대값은 미검증이다.**
